@@ -6,10 +6,11 @@ products_list:list[dict] = []
 alerts:list = [
     lambda: print(f'\n{'\033[91m'}El numero o carácter ingresado es incorrecto, ingresalo nuevamente{'\033[97m'}'),  # Error for invalid input
     lambda: print(f'{'\n\033[91m'}El producto no se encuentra en el inventario'), # Error for product not found
-    lambda name: print(f'\n{'\033[92m'}{name.capitalize()} se ha añadido{'\033[97m'}'), # Success for product added
-    lambda name: print(f'\n{'\033[92m'}{name.capitalize()} se ha actualizado{'\033[97m'}'), # Success for product updated
-    lambda name: print(f'\n{'\033[91m'}{name.capitalize()} se ha eliminado del inventario{'\033[97m'}'), # Success for product deleted
-    lambda: print(f'{'\n\033[91m'}Opción no disponible{'\033[97m'}') # Error for an invalid option
+    lambda name: print(f'\n{'\033[92m'}{name.capitalize()} se ha añadido'), # Success for product added
+    lambda name: print(f'\n{'\033[92m'}{name.capitalize()} se ha actualizado'), # Success for product updated
+    lambda name: print(f'\n{'\033[91m'}{name.capitalize()} se ha eliminado del inventario'), # Success for product deleted
+    lambda: print(f'{'\n\033[91m'}Opción no disponible'), # Error for an invalid option
+    lambda: print(f'{'\n\033[91m'}El producto ya existe en el inventario')
 ]
 
 def validation(text:str, condition)->float:
@@ -23,9 +24,11 @@ def validation(text:str, condition)->float:
 
 def add_product(name:str,price:float,amount:float)->None:
     """Adds new product to inventory with name, price and amount"""
-    full_product:dict = {name: (price, amount, price * amount)} # Creates a product with subtotal calculated
-    products_list.append(full_product)
-    alerts[2](name) # Shows success message
+    if not any(next(iter(producto)) == name.lower().strip() for producto in products_list): # Validates if the product is already in products_list
+        full_product:dict = {name.lower().strip(): (price, amount, price * amount)} # Creates a product with subtotal calculated
+        products_list.append(full_product)
+        alerts[2](name) # Shows success message
+    else: alerts[6]() # Product already exists
 
 def search_product(name:str)->dict:
     """Searches for a product by name and returns the product dict or empty dict if not found"""
@@ -63,14 +66,14 @@ def calculate_total_value(value:float)->None:
     print('DETALLES DEL INVENTARIO')
     print('─' * 40)
     for product in products_list:
-        product_name: str = next(iter(product))
-        print(f"{'Producto':<20}{product_name:>20}")
+        product_name:str = next(iter(product))
+        print(f"{'Producto':<20}{product_name.capitalize():>20}")
         print(f"{'Cantidad':<20}{product[product_name][1]:>20}")
         print(f"{'Precio unitario':<20}{f'${product[product_name][0]:.2f}':>20}")
         print(f"{'Subtotal':<20}{f'${product[product_name][2]:.2f}':>20}")
         print('─' *40)
     print(f"{'Total':<20}{f'${value:.2f}':>20}")
-    print('─' * 40 + f'{'\033[97m'}')
+    print('─' * 40)
 
 def main()->None:
     """Main program loop with a menu for inventory management"""
@@ -92,7 +95,7 @@ def main()->None:
                         print(f"\n{'Producto':<20}{'Precio':^10}{'Cantidad':^10}{'Subtotal':>10}")
                         print("─" * 50)
                         print(f"{next(iter(product)).capitalize():<20}{f'${product[next(iter(product))][0]:.2f}':^10}{product[next(iter(product))][1]:^10}{f'${product[next(iter(product))][2]:.2f}':>10}")
-                        print('─' * 50 + f'{'\033[97m'}')
+                        print('─' * 50)
                     else: alerts[1]()
                 case 3: update_price(str(input('\nIngresa el nombre del producto que deseas actualizar: ')))
                 case 4: delete_product(str(input('\nIngresa el nombre del producto que deseas eliminar: ')))
